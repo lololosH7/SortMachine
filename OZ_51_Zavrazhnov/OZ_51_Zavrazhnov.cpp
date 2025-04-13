@@ -30,7 +30,7 @@ char GetElement(Stack*& P_begin) {
     delete Temp;
 }
 
-bool CreateString(string& InfixString, string& PostfixString, bool& Flag) {
+bool CreateString(string& InfixString, string& PostfixString) {
     Stack* P_begin = nullptr;
     string NewInfixString;
     int countOpen = 0;
@@ -39,12 +39,25 @@ bool CreateString(string& InfixString, string& PostfixString, bool& Flag) {
     for (int i = 0; i < InfixString.size(); i++) {
         char c = InfixString[i];
 
-        if (c == ' ') continue;
+        if (c == ' ') {
+            continue;
+        } 
+        else {
+            NewInfixString += InfixString[i];
+        }
 
-        else NewInfixString += InfixString[i];
+        if (c == '(') {
+            countOpen++;
+        }
 
-        if (c == '(') countOpen++;
-        if (c == ')') countClose++;
+        if (c == ')') {
+            countClose++;
+        }
+
+        if (!isdigit(c) && c != '-' && c != '+' && c != '/' && c != '*' && c != '(' && c != ')') {
+            return false;
+            exit;
+        }
 
     }
 
@@ -52,8 +65,6 @@ bool CreateString(string& InfixString, string& PostfixString, bool& Flag) {
 
         for (int i = 0; i < NewInfixString.size(); i++) {
             char c = NewInfixString[i];
-
-            if (!isdigit(c) || c != '-' || c != '+' || c != '/' || c != '*') return false;
 
             if (c == '-' && (i == 0 || NewInfixString[i - 1] == '(' ||
                 NewInfixString[i - 1] == '+' || NewInfixString[i - 1] == '-' ||
@@ -96,23 +107,30 @@ bool CreateString(string& InfixString, string& PostfixString, bool& Flag) {
             PostfixString += " ";
         }
 
-        return true;
     }
 
-    else cout << "В вашем выражении не хватает скобок, открывающих: " << countOpen << ", закрываюших: " << countClose << endl;
+    else {
+        cout << "В вашем выражении не хватает скобок, открывающих: " << countOpen << ", закрываюших: " << countClose << endl;
+    }
+
+    return true;
 }
 
 int main() {
     setlocale(LC_ALL, "Russian");
-    bool Flag = true;
 
     string InfixString;
     string PostfixString;
     cout << "Введите выражение в инфиксной форме: ";
     getline(cin, InfixString);
 
-    if (CreateString(InfixString, PostfixString, Flag)) cout << "Постфиксная форма: " << PostfixString << endl;
-    else cout << "Выражение содержит некорректные символы" << endl;
+    if (CreateString(InfixString, PostfixString)) {
+        cout << "Постфиксная форма: " << PostfixString << endl;
+    }
+
+    else {
+        cout << "Выражение содержит некорректные символы" << endl;
+    }
 
     return 0;
 }
