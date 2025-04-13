@@ -9,10 +9,11 @@ struct Stack {
 };
 
 int Prioritet(char Element) {
-    if (Element == '(') return 1;
-    if (Element == '~') return 4;
-    if (Element == '*' || Element == '/') return 3;
-    if (Element == '+' || Element == '-') return 2;
+    if (Element == '(') return 4;
+    if (Element == '~') return 3;
+    if (Element == '*' || Element == '/') return 2;
+    if (Element == '+' || Element == '-') return 1;
+    return 0;
 }
 
 void AddElement(Stack*& P_begin, char Element) {
@@ -20,6 +21,11 @@ void AddElement(Stack*& P_begin, char Element) {
     P->Data = Element;
     P->Next = P_begin;
     P_begin = P;
+}
+
+char SeeHead(Stack* P_begin) {
+    if (P_begin == nullptr) return '\0';
+    return P_begin->Data;
 }
 
 char GetElement(Stack*& P_begin) {
@@ -30,112 +36,108 @@ char GetElement(Stack*& P_begin) {
     delete Temp;
 }
 
-bool CreateString(string& InfixString, string& PostfixString) {
-    Stack* P_begin = nullptr;
-    string NewInfixString;
-    int countOpen = 0;
-    int countClose = 0;
+bool CorrectString(string & InfixString, string& NewInfixString) {
     int countDigit = 0;
     int countOperation = 0;
 
     for (int i = 0; i < InfixString.size(); i++) {
         char c = InfixString[i];
 
-        if (c == ' ') {
-            continue;
-        } 
-        else {
-            NewInfixString += InfixString[i];
+        if (!isdigit(c) && c != '-' && c != '+' && c != '/' && c != '*' && c != '(' && c != ')' && c != ' ') {
+            cout << "Строка содержит недопустимый символ: " << c << endl;
+            return false;
         }
 
-       if (c == '(') {
-            countOpen++;
-        }
-
-        if (c == ')') {
-            countClose++;
+        if (c != ' ') {
+            NewInfixString += c;
         }
 
         if (isdigit(c)) {
             countDigit++;
         }
 
-        if (c == '-' || c == '+' || c == '/' || c == '*') {
-            if (c == '-' && (i == 0 || InfixString[i - 1] == '(')) {
-                continue;
+        if (c == '+' || c == '/' || c == '*') {
+            if (i == 0) {
+                cout << "В начале может быть использован только унарный минус, ваш знак: " << c << endl;
+                return false;
             }
-            else {
-                countOperation++;
-            }
+            countOperation++;
         }
 
-        if (!isdigit(c) && c != '-' && c != '+' && c != '/' && c != '*' && c != '(' && c != ')') {
+        if (c == '-' && i != 0 && NewInfixString[i - 1] != '(') {
+            countOperation++;
+        }
+
+    }
+
+    for (int i = 0; i < NewInfixString.size(); i++) {
+        char c = NewInfixString[i];
+
+        if ((c == '-' || c == '+' || c == '*' || c == '/') && (i > 0 && (NewInfixString[i - 1] == '-' ||
+            NewInfixString[i - 1] == '*' || NewInfixString[i - 1] == '+' || NewInfixString[i - 1] == '/'))) {
+            cout << "Две операции подряд недопустимы" << endl;
             return false;
         }
 
     }
 
-    if (countDigit == 1 || countOperation != countDigit - 1) {
+    if (countDigit == 0 || (countDigit > 1 && countOperation != countDigit - 1)) {
+        cout << "Лишние или недостающие операнды или операторы" << endl;
         return false;
     }
 
-    if (countOpen == countClose) {
+    return true;
+}
 
-        for (int i = 0; i < NewInfixString.size(); i++) {
-            char c = NewInfixString[i];
+bool CreateString(string& NewInfixString, string& PostfixString) {
+    Stack* P_begin = nullptr;
+    
+    for (int i = 0; i < NewInfixString.size(); i++) {
+        char c = NewInfixString[i];
 
-            if ((c == '-' || c == '+' || c == '*' || c == '/') && (NewInfixString[i - 1] == '-' ||
-                NewInfixString[i - 1] == '*' || NewInfixString[i - 1] == '+' || NewInfixString[i - 1] == '/')) {
-                return false;
-            }
-
-            if (c == '-' && (i == 0 || NewInfixString[i - 1] == '(' ||
-                NewInfixString[i - 1] == '+' || NewInfixString[i - 1] == '-' ||
-                NewInfixString[i - 1] == '*' || NewInfixString[i - 1] == '/')) {
-                AddElement(P_begin, '~');
-                continue;
-            }
-
-            if (isdigit(c)) {
-                PostfixString += c;
-                PostfixString += " ";
-            }
-
-            if (c == '(') {
-                AddElement(P_begin, c);
-            }
-
-            if (c == '+' || c == '-' || c == '*' || c == '/' || c == '~') {
-                while (P_begin != nullptr && P_begin->Data != '(' &&
-                    Prioritet(P_begin->Data) >= Prioritet(c)) {
-                    PostfixString += GetElement(P_begin);
-                    PostfixString += " ";
-                }
-                AddElement(P_begin, c);
-            }
-
-            if (c == ')') {
-                while (P_begin != nullptr && P_begin->Data != '(') {
-                    PostfixString += GetElement(P_begin);
-                    PostfixString += " ";
-                }
-                if (P_begin != nullptr && P_begin->Data == '(') {
-                    GetElement(P_begin);
-                }
-            }
+        if (c == '-' && (i == 0 || NewInfixString[i - 1] == '(' ||
+            NewInfixString[i - 1] == '+' || NewInfixString[i - 1] == '-' ||
+            NewInfixString[i - 1] == '*' || NewInfixString[i - 1] == '/')) {
+            AddElement(P_begin, '~');
+            continue;
         }
 
-        while (P_begin != nullptr) {
-            PostfixString += GetElement(P_begin);
+        if (isdigit(c)) {
+            PostfixString += c;
             PostfixString += " ";
         }
 
+        else if (c == '(' || c == '+' || c == '-' || c == '*' || c == '/' || c == '~') {
+            while (P_begin != nullptr && SeeHead(P_begin) != '(' &&
+                Prioritet(SeeHead(P_begin)) >= Prioritet(c)) {
+                PostfixString += GetElement(P_begin);
+                PostfixString += " ";
+            }
+            AddElement(P_begin, c);
+        }
+
+        else if (c == ')') {
+            while (P_begin != nullptr && SeeHead(P_begin) != '(') {
+                PostfixString += GetElement(P_begin);
+                PostfixString += " ";
+            }
+            if (P_begin != nullptr && SeeHead(P_begin) == '(') {
+                GetElement(P_begin); 
+            }
+        }
+
     }
 
-    else {
-        cout << "В вашем выражении не хватает скобок, открывающих: " << countOpen << ", закрываюших: " << countClose << endl;
+    while (P_begin != nullptr) {
+        if (SeeHead(P_begin) != '(' && SeeHead(P_begin) != ')') {
+            PostfixString += GetElement(P_begin);
+            PostfixString += " ";
+        }
+        else {
+            GetElement(P_begin);
+        }
     }
-
+    
     return true;
 }
 
@@ -144,10 +146,16 @@ int main() {
 
     string InfixString;
     string PostfixString;
+    string NewInfixString;
+
     cout << "Введите выражение в инфиксной форме, например, 2 + 3 * 4 или (2 + 3) * 4: ";
     getline(cin, InfixString);
 
-    if (CreateString(InfixString, PostfixString)) {
+    if (!CorrectString(InfixString, NewInfixString)) {
+        return 0;
+    }
+
+    if (CreateString(NewInfixString, PostfixString)) {
         cout << "Постфиксная форма: " << PostfixString << endl;
     }
 
