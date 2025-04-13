@@ -35,6 +35,8 @@ bool CreateString(string& InfixString, string& PostfixString) {
     string NewInfixString;
     int countOpen = 0;
     int countClose = 0;
+    int countDigit = 0;
+    int countOperation = 0;
 
     for (int i = 0; i < InfixString.size(); i++) {
         char c = InfixString[i];
@@ -46,12 +48,25 @@ bool CreateString(string& InfixString, string& PostfixString) {
             NewInfixString += InfixString[i];
         }
 
-        if (c == '(') {
+       if (c == '(') {
             countOpen++;
         }
 
         if (c == ')') {
             countClose++;
+        }
+
+        if (isdigit(c)) {
+            countDigit++;
+        }
+
+        if (c == '-' || c == '+' || c == '/' || c == '*') {
+            if (c == '-' && (i == 0 || InfixString[i - 1] == '(')) {
+                continue;
+            }
+            else {
+                countOperation++;
+            }
         }
 
         if (!isdigit(c) && c != '-' && c != '+' && c != '/' && c != '*' && c != '(' && c != ')') {
@@ -60,21 +75,25 @@ bool CreateString(string& InfixString, string& PostfixString) {
 
     }
 
+    if (countDigit == 1 || countOperation != countDigit - 1) {
+        return false;
+    }
+
     if (countOpen == countClose) {
 
         for (int i = 0; i < NewInfixString.size(); i++) {
             char c = NewInfixString[i];
+
+            if ((c == '-' || c == '+' || c == '*' || c == '/') && (NewInfixString[i - 1] == '-' ||
+                NewInfixString[i - 1] == '*' || NewInfixString[i - 1] == '+' || NewInfixString[i - 1] == '/')) {
+                return false;
+            }
 
             if (c == '-' && (i == 0 || NewInfixString[i - 1] == '(' ||
                 NewInfixString[i - 1] == '+' || NewInfixString[i - 1] == '-' ||
                 NewInfixString[i - 1] == '*' || NewInfixString[i - 1] == '/')) {
                 AddElement(P_begin, '~');
                 continue;
-            }
-
-            if ((c == '-' || c == '+' || c == '*' || c == '/') && (NewInfixString[i - 1] == '-' ||
-                NewInfixString[i - 1] == '*' || NewInfixString[i - 1] == '+' || NewInfixString[i - 1] == '/')) {
-                return false;
             }
 
             if (isdigit(c)) {
@@ -125,7 +144,7 @@ int main() {
 
     string InfixString;
     string PostfixString;
-    cout << "Введите выражение в инфиксной форме: ";
+    cout << "Введите выражение в инфиксной форме, например, 2 + 3 * 4 или (2 + 3) * 4: ";
     getline(cin, InfixString);
 
     if (CreateString(InfixString, PostfixString)) {
@@ -133,7 +152,7 @@ int main() {
     }
 
     else {
-        cout << "Выражение содержит некорректные символы или две операции подряд" << endl;
+        cout << "Выражение записано некорректно" << endl;
     }
 
     return 0;
