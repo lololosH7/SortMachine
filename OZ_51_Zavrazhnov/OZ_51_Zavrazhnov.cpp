@@ -56,7 +56,6 @@ bool CreateString(string& InfixString, string& PostfixString) {
 
         if (!isdigit(c) && c != '-' && c != '+' && c != '/' && c != '*' && c != '(' && c != ')') {
             return false;
-            exit;
         }
 
     }
@@ -71,6 +70,11 @@ bool CreateString(string& InfixString, string& PostfixString) {
                 NewInfixString[i - 1] == '*' || NewInfixString[i - 1] == '/')) {
                 AddElement(P_begin, '~');
                 continue;
+            }
+
+            if ((c == '-' || c == '+' || c == '*' || c == '/') && (NewInfixString[i - 1] == '-' ||
+                NewInfixString[i - 1] == '*' || NewInfixString[i - 1] == '+' || NewInfixString[i - 1] == '/')) {
+                return false;
             }
 
             if (isdigit(c)) {
@@ -129,7 +133,7 @@ int main() {
     }
 
     else {
-        cout << "Выражение содержит некорректные символы" << endl;
+        cout << "Выражение содержит некорректные символы или две операции подряд" << endl;
     }
 
     return 0;
